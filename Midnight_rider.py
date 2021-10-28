@@ -19,7 +19,6 @@ def __init__(self):
         self.done = False
 
 def introduction(self) -> None:
-    # TODO: print this out character by character
     typewriter_effect(Midnight_Rider_Text.INTRODUCTION)
 
 def typewriter_effect(self, text: str) -> None:
