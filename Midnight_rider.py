@@ -1,58 +1,129 @@
+
 # Midnight Rider
+
+import random
 import sys
 import textwrap
 import time
 import Midnight_Rider_Text
 
-
 # A text-based game of intrigue and illusion
 
+# CONSTANTS
+MAX_FUEL = 50
+MAX_TOFU = 3
+
 class Game:
-
-    """Represents our game engine
-    attribute:
-        done: Describes if the game is
-                finished or not- bool
-
+    """Represent our game engine
+    Attributes:
+        done: describes if the game is
+            finished or not - bool
+        distance_traveled: describe the distance
+            that we've traveled so far this game,
+            in km
+        amount_of_tofu: how much tofu we have
+            left in our inventory
+        agents_distance: describes the distance
+            between the player and the agents
+        fuel: describes amount of fuel remaining,
+            starts off at 50
     """
-def __init__(self):
+    def __init__(self):
         self.done = False
+        self.distance_traveled = 0
+        self.amount_tofu = MAX_TOFU
+        self.agents_distance = -20
+        self.fuel = MAX_FUEL
 
-def introduction(self) -> None:
-    typewriter_effect(Midnight_Rider_Text.INTRODUCTION)
+    def introduction(self) -> None:
+        """Print the introduction text"""
+        self.typewriter_effect(Midnight_Rider_Text.INTRODUCTION)
 
-def typewriter_effect(self, text: str) -> None:
-    for char in textwrap.dedent(text):
-        time.sleep(0.05)
-        sys.stdout.write(char)
-        sys.stdout.flush()
+    def typewriter_effect(self, text: str) -> None:
+        """Print out to console with a typewriter effect."""
+        for char in textwrap.dedent(text):
+            time.sleep(0.05)
+            sys.stdout.write(char)
+            sys.stdout.flush()
 
-def show_choices(self) -> None:
-    time.sleep(1)
-    print(Midnight_Rider_Text.CHOICES)
-    time.sleep(1)
+    def show_choices(self) -> None:
+        """Show the user their choices"""
+        time.sleep(1)
+        print(Midnight_Rider_Text.CHOICES)
+        time.sleep(1)
 
-def get_choice(self) -> None:
-    """Gets the user's choice and changes
-    the enviroment"""
-    # Get the user's response
-    user_choice = input().strip(",.?!").lower()
+    def get_choice(self) -> None:
+        """Gets the user's choice and changes
+        the environment"""
+        # Get the user's response
+        user_choice = input().strip(",.?!").lower()
 
-    # based on their choice, change the attribute
-    # of the class
-    if user_choice == "Q":
-        self.done == True
+        # Based on their choice, change the attributes
+        # of the class
+        # TODO: Implement eating/hunger
+        agents_distance_now = random.randrange(7, 15)
+
+        if user_choice == "b":
+            # Move the player
+            player_distance_now = random.randrange(5, 10)
+            self.distance_traveled += player_distance_now
+
+            # Move the agents
+            self.agents_distance += agents_distance_now - player_distance_now
+
+            # Burn fuel
+            self.fuel -= random.randrange(3, 8)
+
+            # Give the player some feedback
+            print(f"\n-------You drive conservatively.")
+            print(f"-------You traveled {player_distance_now} kms.\n")
+
+        elif user_choice == "c":
+            # Move the player
+            player_distance_now = random.randrange(10, 16)
+            self.distance_traveled += player_distance_now
+
+            # Move the agents
+            self.agents_distance += agents_distance_now - player_distance_now
+
+            # Burn fuel
+            self.fuel -= random.randrange(5, 11)
+
+            # Give the player some feedback
+            print(f"\n-------ZOOOOOOOOOOM.")
+            print(f"-------You traveled {player_distance_now} kms.\n")
+
+        elif user_choice == "d":
+            self.fuel = MAX_FUEL
+
+            # Decide how far the agents go
+            self.agents_distance += agents_distance_now
+
+            # Give the user feedback
+            print(Midnight_Rider_Text.REFUEL)
+            time.sleep(2)
+        elif user_choice == "e":
+            print("---Status Check---")
+            print(f"Distance Traveled: {self.distance_traveled} kms")
+            print(f"Fuel remaining: {self.fuel} L")
+            print(f"Tofu Pieces Left: {self.amount_tofu}")
+            print(f"Agent's Distance: {abs(self.agents_distance)} kms behind")
+            print("------")
+            time.sleep(2)
+        elif user_choice == "q":
+            self.done = True
+
 
 def main() -> None:
-    game = Game()
-    game.introduction
+    game = Game()   # starting a new game
+    # game.introduction()
 
-
-    # Main Loop
     while not game.done:
         game.show_choices()
         game.get_choice()
         # TODO: Check win/lose conditions
 
-    if __name__  == "__main__":
-        main()
+
+
+if __name__ == "__main__":
+    main()
