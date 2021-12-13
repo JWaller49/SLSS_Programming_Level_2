@@ -1,8 +1,5 @@
-# Collecting Blocks Example
-# Author: James Waller
-
-
 import random
+import time
 import pygame
 
 pygame.init()
@@ -18,10 +15,10 @@ BLK_CHOCOLATE = (25, 17, 2)
 
 BGCOLOUR =  WHITE
 
-SCREEN_WIDTH  = 800
+SCREEN_WIDTH =  800
 SCREEN_HEIGHT = 600
 SCREEN_SIZE   = (SCREEN_WIDTH, SCREEN_HEIGHT)
-WINDOW_TITLE  = "Collecing Blocks"
+WINDOW_TITLE  = "Collecting Blocks"
 
 
 class Player(pygame.sprite.Sprite):
@@ -32,6 +29,8 @@ class Player(pygame.sprite.Sprite):
             representation of our Block
         rect: numerical representation of
             our Block [x, y, width, height]
+        hp: describe how much health our
+            player has
     """
     def __init__(self) -> None:
         # Call the superclass constructor
@@ -43,6 +42,13 @@ class Player(pygame.sprite.Sprite):
 
         # Based on the image, create a Rect for the block
         self.rect = self.image.get_rect()
+
+        # Initial health points
+        self.hp = 250
+
+    def hp_remaining(self) -> float:
+        """Return the percent of health remaining"""
+        return self.hp / 250
 
 
 class Block(pygame.sprite.Sprite):
@@ -132,6 +138,18 @@ def main() -> None:
     num_blocks = 100
     num_enemies = 10
     score = 0
+    time_start = time.time()
+    time_invincible = 5             # seconds
+    game_state = "running"
+    endgame_cooldown = 5            # seconds
+    time_ended = 0.0
+
+    endgame_messages = {
+        "win": "Congratulations, you won!",
+        "lose": "Sorry, they got you. Play again!",
+    }
+
+    font = pygame.font.SysFont("Arial", 25)
 
     pygame.mouse.set_visible(False)
 
@@ -168,7 +186,7 @@ def main() -> None:
     # Add the Player to all_sprites group
     all_sprites.add(player)
 
-    pygame.mouse.set_visible(False)
+    pygame.mouse.set_visible(True)
 
 
     # ----------- MAIN LOOP
@@ -178,25 +196,71 @@ def main() -> None:
             if event.type == pygame.QUIT:
                 done = True
 
+        # End-game listener
+        if score == num_blocks:
+            # Indicate to draw a message
+            game_state = "won"
+
+            # SET THE TIME THAT THE GAME WAS WON
+            if time_ended == 0:
+                time_ended = time.time()
+
+            # Set parameters to keep the screen alive
+            # Wait 5 seconds to kill the screen
+            if time.time() - time_ended >= endgame_cooldown:
+                done = True
+
+        if player.hp_remaining() <= 0:
+            done = True
+
         # ----------- CHANGE ENVIRONMENT
         # Process player movement based on mouse pos
         mouse_pos = pygame.mouse.get_pos()
-        player.rect.x, player.rect.y = mouse_pos
+        player.rect.x = mouse_pos[0] - player.rect.width / 2
+        player.rect.y = mouse_pos[1] - player.rect.height / 2
 
         # Update the location of all sprites
         all_sprites.update()
 
-        # Check all collisions between player and the blocks
-        blocks_collided = pygame.sprite.spritecollide(player, block_sprites, True)
+        # Check all collisions between player and the ENEMIES
+        enemies_collided = pygame.sprite.spritecollide(player, enemy_sprites, False)
 
-        for block in blocks_collided:
-            score += 1
-            print(f"Score: {score}")
+        # Set a time for invincibility at the beginning of the game
+        if time.time() - time_start > time_invincible and game_state != "won":
+            for enemy in enemies_collided:
+                player.hp -= 1
+
+            # Check all collisions between player and the blocks
+            blocks_collided = pygame.sprite.spritecollide(player, block_sprites, True)
+
+            for block in blocks_collided:
+                score += 1
+
         # ----------- DRAW THE ENVIRONMENT
         screen.fill(BGCOLOUR)      # fill with bgcolor
 
         # Draw all sprites
         all_sprites.draw(screen)
+
+        # Draw the score on the screen
+        screen.blit(
+            font.render(f"Score: {score}", True, BLACK),
+            (5, 5)
+        )
+
+        # Draw a health bar
+        # Draw the background rectangle
+        pygame.draw.rect(screen, GREEN, [580, 5, 215, 20])
+        # Draw the foreground rectangle which is the remaining health
+        life_remaining = 215 - int(215 * player.hp_remaining())
+        pygame.draw.rect(screen, BLUE, [580, 5, life_remaining, 20])
+
+        # If we've won, draw the text on the screen
+        if game_state == "won":
+            screen.blit(
+                font.render(endgame_messages["win"], True, BLACK),
+                (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+            )
 
         # Update the screen
         pygame.display.flip()
